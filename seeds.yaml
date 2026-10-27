@@ -1,0 +1,41 @@
+# One-time import of the papers you already have, so the ranking has something to
+# learn from on the first run. Titles are matched on Semantic Scholar; check the
+# bootstrap log for any that weren't found and add those to Zotero by hand.
+# Lines starting with '#' are skipped: uncomment what you want to keep.
+
+"RL & game agents":
+  - "Using deep reinforcement learning to reveal how the brain encodes abstract state-space representations in high-dimensional environments"
+  - "Reason to play"
+  - "Training Agents Inside of Scalable World Models"
+  - "Mastering Diverse Domains through World Models"
+  - "Mastering Atari, Go, Chess and Shogi by Planning with a Learned Model"
+  - "Video PreTraining (VPT): Learning to Act by Watching Unlabeled Online Videos"
+  - "Decision Transformer: Reinforcement Learning via Sequence Modeling"
+  - "A Generalist Agent"
+  - "Scaling Instructable Agents Across Many Simulated Worlds"
+  - "Diffusion Models Are Real-Time Game Engines"
+  # Flagged as off-axis earlier — uncomment to keep:
+  # - "Optimizing reinforcement learning agents in games using curriculum learning and reward shaping"
+  # - "A review of multi-agent reinforcement learning in video games"
+  # - "Reinforcement World Model Learning for LLM agents"
+  # Suggested additions (on-axis: games x brain data x agents):
+  # - "Behavioral Imitation with Artificial Neural Networks Leads to Personalized Models of Brain Dynamics During Videogame Play"
+  # - "Training neural networks from scratch in a videogame leads to brittle brain encoding"
+
+"Neuroscience":
+  - "TRIBE: TRImodal Brain Encoder for whole-brain fMRI response prediction"
+  - "A foundation model of vision, audition, and language for in-silico neuroscience"
+  - "Explaining brain computation through mechanistic interpretability of deep neural networks"
+  - "Neural Encoding and Decoding at Scale"
+  # Suggested additions:
+  # - "Encoding and decoding in fMRI"
+  # - "Learnable latent embeddings for joint behavioural and neural analysis"
+
+"Ethics":
+  - "A unified science of intelligence"
+  - "Bridging the black box: a survey on mechanistic interpretability in AI"
+  # Flagged as general AI safety rather than neuro-specific — uncomment to keep:
+  # - "Superintelligent Agents Pose Catastrophic Risks: Can Scientist AI Offer a Safer Path?"
+  # - "Evolvable AI: threats of a new major transition in evolution"
+  # Suggested addition:
+  # - "Four ethical priorities for neurotechnologies and AI"

@@ -1,0 +1,84 @@
+name: Weekly papers
+
+on:
+  schedule:
+    - cron: "41 16 * * 0"   # Sundays 16:41 UTC (17:41 Paris in winter, 18:41 in summer)
+  workflow_dispatch:         # "Run workflow" button for manual runs
+
+permissions:
+  contents: write            # to commit state/ back to the repo
+
+concurrency:
+  group: weekly-papers
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python deps
+        run: pip install -r requirements.txt
+
+      - name: 1 · Sync Zotero, gather and rank candidates
+        env:
+          ZOTERO_USER_ID: ${{ secrets.ZOTERO_USER_ID }}
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY }}
+          S2_API_KEY: ${{ secrets.S2_API_KEY }}
+        run: python -m pipeline.fetch
+
+      - name: Check shortlist
+        id: check
+        run: echo "n=$(jq length work/candidates.json)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        if: steps.check.outputs.n != '0'
+        with:
+          node-version: "20"
+
+      - name: 2 · Claude writes the cards (uses your Claude subscription)
+        if: steps.check.outputs.n != '0'
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          npm install -g @anthropic-ai/claude-code
+          mkdir -p work/cards
+          claude -p "$(cat prompts/summarize.md)" \
+            --model sonnet \
+            --allowedTools "Read,Write,Glob" \
+            --permission-mode acceptEdits \
+            --max-turns 80
+          echo "cards written: $(ls work/cards | wc -l)"
+
+      - name: 3 · Push cards to Zotero Inbox
+        if: steps.check.outputs.n != '0'
+        env:
+          ZOTERO_USER_ID: ${{ secrets.ZOTERO_USER_ID }}
+          ZOTERO_API_KEY: ${{ secrets.ZOTERO_API_KEY }}
+        run: python -m pipeline.push
+
+      - name: Save state
+        if: always()
+        run: |
+          git config user.name "paper-pipeline"
+          git config user.email "actions@users.noreply.github.com"
+          git add state
+          git diff --cached --quiet || git commit -m "state: weekly run $(date -u +%F)"
+          git push
+
+      - name: Keep this week's shortlist and cards for debugging
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: work-${{ github.run_id }}
+          path: |
+            work/candidates.json
+            work/cards/
+          retention-days: 30

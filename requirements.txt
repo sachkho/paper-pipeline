@@ -1,0 +1,7 @@
+pyzotero>=1.6
+requests>=2.31
+PyYAML>=6.0
+feedparser>=6.0
+pypdf>=4.0
+numpy>=1.26
+fastembed>=0.3

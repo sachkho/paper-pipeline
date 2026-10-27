@@ -1,0 +1,67 @@
+# Paper pipeline configuration. Edit freely; every run re-reads this file.
+
+project_context: >
+  PhD on the Digital Brain Project (Mathis Group, EPFL). Human participants play
+  video games (notably COOM, a continual-RL benchmark built on ViZDoom, run through
+  the fmri-gym framework) while fMRI and MEG are recorded. The goal is to put RL
+  agents and/or world models in the same conditions and compare their internal
+  representations and behaviour with the brain data (encoding models, RSA,
+  representational alignment). Background: computer vision, representation
+  learning, RL. No formal neuroscience training yet, so foundational
+  fMRI/MEG methods papers are valuable too.
+
+zotero:
+  inbox: "Inbox"          # new cards land here; created automatically
+  pipeline_tag: "pipeline" # tag on every item the pipeline creates
+
+# Each folder = one Zotero collection (created automatically if missing).
+# `description` is used both to rank candidates (when a folder has few papers)
+# and as the rubric Claude uses to judge relevance.
+# `arxiv_queries` use arXiv API search syntax.
+folders:
+  - name: "RL & game agents"
+    description: >
+      Reinforcement learning and game-playing agents relevant to modelling humans
+      playing video games: world models (Dreamer, MuZero-style planning), agents
+      in 3D/first-person games (ViZDoom, Minecraft, Atari), continual RL,
+      imitation learning from human gameplay, generalist agents, and work
+      comparing agent behaviour or representations with humans.
+    arxiv_queries:
+      - '(cat:cs.LG OR cat:cs.AI) AND (abs:"world model" OR abs:"world models")'
+      - '(cat:cs.LG OR cat:cs.AI) AND (abs:"video game" OR abs:ViZDoom OR abs:Atari OR abs:Minecraft) AND abs:agent'
+      - '(cat:cs.LG OR cat:cs.AI) AND abs:"continual reinforcement learning"'
+      - '(cat:cs.LG OR cat:q-bio.NC) AND abs:"human-like" AND abs:"reinforcement learning"'
+
+  - name: "Neuroscience"
+    description: >
+      Brain encoding and decoding with deep networks on fMRI, MEG or EEG; brain-model
+      representational alignment (RSA, Brain-Score, TRIBE-style encoders);
+      naturalistic neuroimaging datasets; neural correlates of RL, planning and
+      decision-making in humans; fMRI/MEG methodology useful to someone new to
+      the field.
+    arxiv_queries:
+      - 'cat:q-bio.NC AND (abs:fMRI OR abs:MEG OR abs:"brain encoding" OR abs:"neural encoding")'
+      - '(cat:cs.LG OR cat:cs.CV OR cat:cs.CL) AND (abs:fMRI OR abs:MEG OR abs:"brain activity" OR abs:"brain responses")'
+      - '(cat:cs.LG OR cat:q-bio.NC) AND abs:"representational alignment"'
+
+  - name: "Ethics"
+    description: >
+      Ethics and societal questions specific to AI applied to neuroscience and
+      brain data: neuroethics, mental privacy, neurorights, consent and
+      re-identification for neuroimaging datasets, dual use of brain decoding,
+      and interpretability as a tool for scientific understanding.
+    arxiv_queries:
+      - '(cat:cs.CY OR cat:cs.AI OR cat:q-bio.NC) AND (abs:neuroethics OR abs:"mental privacy" OR abs:neurorights OR abs:"brain data")'
+
+biorxiv:
+  categories: ["neuroscience"]   # bioRxiv subject areas to scan
+
+run:
+  lookback_days: 7          # weekly run
+  arxiv_max_results: 150    # per query
+  s2_recs_limit: 100        # Semantic Scholar recommendations per run
+  s2_recs_max_age_days: 180 # ignore recommended papers older than this
+  n_candidates: 30          # shortlist handed to Claude
+  max_cards: 15             # cards Claude writes (hard cap)
+  fulltext_chars: 40000     # truncate extracted PDF text (bounds token use)
+  negative_weight: 0.5      # penalty for similarity to papers you binned
