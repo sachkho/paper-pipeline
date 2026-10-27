@@ -13,8 +13,14 @@ SKIP_TYPES = {"note", "attachment", "annotation"}
 
 
 def connect() -> zotero.Zotero:
-    uid = os.environ["ZOTERO_USER_ID"]
-    key = os.environ["ZOTERO_API_KEY"]
+    uid = os.environ.get("ZOTERO_USER_ID", "").strip()
+    key = os.environ.get("ZOTERO_API_KEY", "").strip()
+    if not uid.isdigit():
+        raise SystemExit(
+            "ZOTERO_USER_ID is missing or not a number. Add it as a repository secret "
+            "(the numeric 'user ID for use in API calls' on zotero.org/settings/keys, not your username).")
+    if not key:
+        raise SystemExit("ZOTERO_API_KEY is missing. Add it as a repository secret.")
     return zotero.Zotero(uid, "user", key)
 
 
