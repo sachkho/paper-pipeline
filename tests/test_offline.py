@@ -137,3 +137,24 @@ def test_create_paper_and_clean_inbox(tmp_path):
 
 def test_paper_key_fallbacks():
     assert paper_key(None, None, "A  Title: v2!") == "title:a title v2"
+
+
+def test_pdf_backfill(monkeypatch, tmp_path):
+    from pipeline import pdfs
+    monkeypatch.setattr(pdfs, "WORK", tmp_path)
+    class R:
+        status_code = 200
+        content = b"%PDF-1.5 data"
+    monkeypatch.setattr(pdfs, "http", lambda *a, **k: R())
+    class Z:
+        attached = []
+        def children(self, key):
+            return [{"data": {"itemType": "attachment", "contentType": "application/pdf"}}] if key == "HAS" else []
+        def attachment_simple(self, files, parentid=None):
+            self.attached.append(parentid)
+    z = Z()
+    papers = [{"key": "HAS", "data": {"title": "a", "url": "https://arxiv.org/abs/2301.04104"}},
+              {"key": "AX", "data": {"title": "b", "extra": "S2: x\narXiv: 2301.04104"}},
+              {"key": "NO", "data": {"title": "c", "DOI": "10.1038/nature06976"}}]
+    pdfs.backfill(z, papers)
+    assert z.attached == ["AX"]

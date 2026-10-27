@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import yaml
 
-from . import sources, zotero_io as zio
+from . import pdfs, sources, zotero_io as zio
 from .common import ROOT, folder_names, load_config, norm_title
 
 
@@ -82,9 +82,13 @@ def main() -> None:
                 print(f"[bootstrap] error on '{title}': {e}")
 
     if missing:
-        print("\n[bootstrap] NOT FOUND on Semantic Scholar — add these by hand:")
+        print("\n[bootstrap] NOT FOUND — add these by hand:")
         for t in missing:
             print(f"  - {t}")
+
+    print("\n[bootstrap] attaching PDFs to papers in your folders…")
+    papers = [it for f in folders for it in zio.collection_papers(zot, colls[f])]
+    pdfs.backfill(zot, papers)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ import io
 import numpy as np
 from pypdf import PdfReader
 
-from . import rank, sources, zotero_io as zio
+from . import pdfs, rank, sources, zotero_io as zio
 from .common import (STATE, WORK, arxiv_id, folder_names, http, load_config, norm_title,
                      read_json, safe_name, write_json)
 
@@ -55,6 +55,8 @@ def main() -> None:
     print(f"[zotero] {moved} filed item(s) removed from Inbox")
 
     folder_items = {f: zio.collection_papers(zot, colls[f]) for f in folders}
+    # Papers you add to a folder by hand get their arXiv PDF attached too.
+    pdfs.backfill(zot, [it for f in folders for it in folder_items[f]], limit=10)
     library = zio.library_papers(zot)
 
     negatives = read_json(STATE / "negatives.json", {})
