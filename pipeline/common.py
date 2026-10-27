@@ -71,7 +71,7 @@ def safe_name(key: str) -> str:
 
 # ---------- http ----------
 
-def http(method: str, url: str, *, retries: int = 4, pause: float = 0.0, **kw) -> requests.Response:
+def http(method: str, url: str, *, retries: int = 5, pause: float = 0.0, **kw) -> requests.Response:
     headers = {**UA, **kw.pop("headers", {})}
     timeout = kw.pop("timeout", 60)
     last = None
@@ -86,7 +86,10 @@ def http(method: str, url: str, *, retries: int = 4, pause: float = 0.0, **kw) -
             continue
         if r.status_code in (429, 500, 502, 503, 504):
             last = RuntimeError(f"{r.status_code} on {url}")
-            time.sleep(2 ** (attempt + 1))
+            # Rate limits (esp. Semantic Scholar's shared anonymous pool) need real waits.
+            wait = r.headers.get("Retry-After", "")
+            delay = float(wait) if wait.isdigit() else (5 * 2 ** attempt if r.status_code == 429 else 2 ** (attempt + 1))
+            time.sleep(min(delay, 60))
             continue
         return r
     raise RuntimeError(f"giving up on {url}: {last}")

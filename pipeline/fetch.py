@@ -81,8 +81,12 @@ def main() -> None:
             if sid is None and budget > 0:
                 budget -= 1
                 ax = arxiv_id(d.get("archiveID")) or arxiv_id(d.get("url"))
-                sid = sources.s2_resolve(ax, d.get("DOI"), d.get("title")) or ""
-                s2_cache[k] = sid
+                try:
+                    sid = sources.s2_resolve(ax, d.get("DOI"), d.get("title")) or ""
+                    s2_cache[k] = sid
+                except Exception as e:  # rate-limited: retry next week, don't crash
+                    print(f"[s2] could not resolve '{d.get('title', '')[:60]}': {e}")
+                    sid = None
             if sid:
                 pos_ids.append(sid)
     write_json(STATE / "s2_ids.json", s2_cache)

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
 
 import feedparser
 
@@ -50,6 +51,15 @@ def arxiv_search(query: str, since: dt.date, max_results: int) -> list[dict]:
     })
     r.raise_for_status()
     return parse_arxiv_feed(r.text, since)
+
+
+def arxiv_title_search(title: str, max_results: int = 5) -> list[dict]:
+    words = re.sub(r"[^A-Za-z0-9 ]+", " ", title).split()
+    query = " AND ".join(f"ti:{w}" for w in words if len(w) > 2)[:900]
+    r = http("GET", "https://export.arxiv.org/api/query", pause=3.0,
+             params={"search_query": query, "max_results": max_results})
+    r.raise_for_status()
+    return parse_arxiv_feed(r.text, dt.date.min)
 
 
 # ---------------- bioRxiv ----------------

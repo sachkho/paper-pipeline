@@ -13,6 +13,25 @@ def _overlap(a: str, b: str) -> float:
     return len(A & B) / max(1, len(A | B))
 
 
+def _lookup(title: str) -> dict | None:
+    """Semantic Scholar first; if it fails or rate-limits, fall back to arXiv title search."""
+    try:
+        p = sources.s2_match_full(title)
+        if p and _overlap(title, p.get("title", "")) >= 0.6:
+            c = sources.s2_to_cand(p)
+            c["venue"] = p.get("venue")
+            return c
+    except Exception as e:
+        print(f"[bootstrap] Semantic Scholar unavailable for '{title[:60]}': {e}")
+    try:
+        best = max(sources.arxiv_title_search(title), key=lambda c: _overlap(title, c["title"]), default=None)
+        if best and _overlap(title, best["title"]) >= 0.6:
+            return best
+    except Exception as e:
+        print(f"[bootstrap] arXiv lookup failed for '{title[:60]}': {e}")
+    return None
+
+
 def main() -> None:
     cfg = load_config()
     folders = folder_names(cfg)
@@ -29,14 +48,16 @@ def main() -> None:
             print(f"[bootstrap] '{folder}' is not in config.yaml folders — skipped")
             continue
         for title in titles or []:
-            p = sources.s2_match_full(title)
-            if not p or _overlap(title, p.get("title", "")) < 0.6:
+            if norm_title(title) in have:
+                print(f"[bootstrap] already in library: {title}")
+                continue
+            c = _lookup(title)
+            if not c:
                 missing.append(title)
                 continue
-            if norm_title(p["title"]) in have:
-                print(f"[bootstrap] already in library: {p['title']}")
+            if norm_title(c["title"]) in have:
+                print(f"[bootstrap] already in library: {c['title']}")
                 continue
-            c = sources.s2_to_cand(p)
             try:
                 item = zot.item_template("journalArticle")
                 item["title"] = c["title"]
@@ -45,8 +66,8 @@ def main() -> None:
                 item["url"] = c["url"]
                 item["date"] = c["date"]
                 item["DOI"] = c.get("doi") or ""
-                item["publicationTitle"] = p.get("venue") or ("arXiv" if c.get("arxiv") else "")
-                extra = [f"S2: {c['s2_id']}"]
+                item["publicationTitle"] = c.get("venue") or ("arXiv" if c.get("arxiv") else "")
+                extra = [f"S2: {c['s2_id']}"] if c.get("s2_id") else []
                 if c.get("arxiv"):
                     extra.append(f"arXiv: {c['arxiv']}")
                 item["extra"] = "\n".join(extra)
